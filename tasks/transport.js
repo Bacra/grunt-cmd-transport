@@ -53,6 +53,8 @@ module.exports = function(grunt) {
         comments: true
       },
 
+      keeyAlias: false,
+
       // https://github.com/aliceui/aliceui.org/issues/9
       styleBox: false
     });

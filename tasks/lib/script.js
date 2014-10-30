@@ -46,7 +46,7 @@ exports.init = function(grunt) {
       dependencies: deps,
       require: function(v) {
         // ignore when deps is specified by developer
-        return depsSpecified ? v : iduri.parseAlias(options, v);
+        return depsSpecified || options.keepAlias ? v : iduri.parseAlias(options, v);
       }
     });
     data = astCache.print_to_string(options.uglify);
@@ -204,7 +204,7 @@ exports.init = function(grunt) {
           }
         } else if (!moduleDeps[id]) {
           var alias = iduri.parseAlias(options, id);
-          deps.push(alias);
+          deps.push(options.keepAlias ? id : alias);
 
           // don't parse no javascript dependencies
           var ext = path.extname(alias);
