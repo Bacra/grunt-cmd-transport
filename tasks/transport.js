@@ -61,6 +61,24 @@ module.exports = function(grunt) {
       options.process = {};
     }
 
+    // parse alias for normal id
+    for(var i in options.alias)
+    {
+      options.paths.some(function(base) {
+        var filepath = path.join(base, options.alias[i]);
+        var extname = path.extname(filepath);
+        if (!extname) {
+          filepath += '.js';
+        }
+        if (grunt.file.exists(filepath)) {
+          filepath = path.relative(base, filepath).replace(/\\/g, '/');
+          grunt.log.verbose.writeln('alias find module "' + filepath + '"');
+          options.alias[i] = extname ? filepath : filepath.replace(/\.js$/, '');
+          return true;
+        }
+      });
+    }
+
     var count = 0;
     this.files.forEach(function(fileObj) {
       // cwd shouldn't exist after normalize path
