@@ -42,11 +42,15 @@ exports.init = function(grunt) {
 
     // create .js file
     astCache = ast.modify(astCache, {
-      id: meta.id ? meta.id : unixy(options.idleading + fileObj.name.replace(/\.js$/, '')),
+      id: getMinAlias(meta.id ? meta.id : unixy(options.idleading + fileObj.name.replace(/\.js$/, '')), options),
       dependencies: deps,
       require: function(v) {
-        // ignore when deps is specified by developer
-        return depsSpecified ? v : iduri.parseAlias(options, v);
+        if (typeof options.keepAlias == 'string') {
+          return getMinAlias(v, options);
+        } else {
+          // ignore when deps is specified by developer
+          return depsSpecified || options.keepAlias === true ? v : iduri.parseAlias(options, v);
+        }
       }
     });
     data = astCache.print_to_string(options.uglify);
@@ -144,11 +148,36 @@ exports.init = function(grunt) {
       meta.dependencies.forEach(function(dep) {
         dep = iduri.absolute(alias, dep);
         if (!_.contains(deps, dep) && !_.contains(ids, dep) && !_.contains(ids, dep.replace(/\.js$/, ''))) {
-          deps.push(dep);
+          deps.push(getMinAlias(dep, options));
         }
       });
     });
     return deps;
+  }
+
+  var minAlias = {};
+  var minAliasIndex = 0;
+  function getMinAlias(alias, options) {
+    if (typeof options.keepAlias == 'string') {
+      alias = iduri.parseAlias(options, alias);
+      if (minAlias[alias]) return minAlias[alias];
+
+      var uin;
+      do {
+        uin = cutInt(minAliasIndex++);
+      } while(options.alias[uin]);
+      options.alias[uin] = alias;
+      minAlias[alias] = uin;
+
+      return uin;
+    }
+
+    return alias;
+  }
+  var minAliasChar = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-0123456789$&%=+';
+  function cutInt(num) {
+    strArrLen = minAliasChar.length;
+    return num < strArrLen ? minAliasChar[num] : cutInt(Math.floor(num/strArrLen), minAliasChar, strArrLen) + minAliasChar[num%strArrLen];
   }
 
   function parseDependencies(fpath, options) {
@@ -195,16 +224,16 @@ exports.init = function(grunt) {
             if (altId.charAt(0) !== '.') {
               altId = './' + altId;
             }
-            deps.push(altId);
+            deps.push(getMinAlias(altId, options));
           } else {
-            deps.push(id);
+            deps.push(getMinAlias(id, options));
           }
           if (/\.js$/.test(iduri.appendext(id))) {
             deps = grunt.util._.union(deps, relativeDependencies(id, options, fpath));
           }
         } else if (!moduleDeps[id]) {
           var alias = iduri.parseAlias(options, id);
-          deps.push(alias);
+          deps.push(getMinAlias(typeof options.keepAlias === true ? id : alias, options));
 
           // don't parse no javascript dependencies
           var ext = path.extname(alias);

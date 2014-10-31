@@ -23,6 +23,7 @@ module.exports = function(grunt) {
 
       idleading: '',
       alias: {},
+      keepAlias: false,
 
       // create a debug file or not
       debug: true,
@@ -56,6 +57,13 @@ module.exports = function(grunt) {
       // https://github.com/aliceui/aliceui.org/issues/9
       styleBox: false
     });
+
+    var customAliasKeys = Object.keys(options.alias);
+    if (typeof options.keepAlias == 'string') {
+      if (grunt.file.exists(options.keepAlias)) {
+        grunt.util._.union(options.alias, grunt.file.readJSON(options.keepAlias));
+      }
+    }
 
     if (options.process === true) {
       options.process = {};
@@ -112,5 +120,14 @@ module.exports = function(grunt) {
       count++;
     });
     grunt.log.writeln('transport ' + count.toString().cyan + ' files');
+
+    if (typeof options.keepAlias == 'string') {
+      var tmpAlias = grunt.util._.extend({}, options.alias);
+      customAliasKeys.forEach(function(alias) {
+        delete tmpAlias[alias];
+      });
+      grunt.file.write(options.keepAlias, JSON.stringify(tmpAlias));
+      grunt.log.writeln('transport write minAlias file: ' + options.keepAlias);
+    }
   });
 };
