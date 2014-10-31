@@ -59,9 +59,9 @@ module.exports = function(grunt) {
     });
 
     if (typeof options.keepAlias == 'string') {
-      try {
+      if (grunt.file.exists(options.keepAlias)) {
         grunt.util._.union(options.alias, grunt.file.readJSON(options.keepAlias));
-      } catch(e){}
+      }
     }
 
     if (options.process === true) {
