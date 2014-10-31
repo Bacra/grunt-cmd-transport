@@ -58,6 +58,7 @@ module.exports = function(grunt) {
       styleBox: false
     });
 
+    var customAliasKeys = Object.keys(options.alias);
     if (typeof options.keepAlias == 'string') {
       if (grunt.file.exists(options.keepAlias)) {
         grunt.util._.union(options.alias, grunt.file.readJSON(options.keepAlias));
@@ -103,7 +104,11 @@ module.exports = function(grunt) {
     grunt.log.writeln('transport ' + count.toString().cyan + ' files');
 
     if (typeof options.keepAlias == 'string') {
-      grunt.file.write(options.keepAlias, JSON.stringify(options.alias));
+      var tmpAlias = grunt.util._.extend({}, options.alias);
+      customAliasKeys.forEach(function(alias) {
+        delete tmpAlias[alias];
+      });
+      grunt.file.write(options.keepAlias, JSON.stringify(tmpAlias));
       grunt.log.writeln('transport write minAlias file: ' + options.keepAlias);
     }
   });
