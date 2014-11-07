@@ -99,7 +99,7 @@ exports.init = function(grunt) {
     return data;
   }
 
-  function moduleDependencies(id, options) {
+  function moduleDependencies(id, options, basefile) {
     var alias = iduri.parseAlias(options, id);
 
     if (iduri.isAlias(options, id) && alias === id) {
@@ -122,18 +122,18 @@ exports.init = function(grunt) {
     options.paths.some(function(base) {
       var filepath = path.join(base, file);
       if (grunt.file.exists(filepath)) {
-        grunt.log.verbose.writeln('find module "' + filepath + '"');
+        grunt.log.verbose.writeln('find module "' + filepath + '", basefile: '+basefile);
         fpath = filepath;
         return true;
       }
     });
 
     if (!fpath) {
-      grunt.fail.warn("can't find module " + alias);
+      grunt.fail.warn("can't find module " + alias + ', basefile: '+basefile);
       return [];
     }
     if (!grunt.file.exists(fpath)) {
-      grunt.fail.warn("can't find " + fpath);
+      grunt.fail.warn("can't find " + fpath + ', basefile: '+basefile);
       return [];
     }
     var data = grunt.file.read(fpath);
@@ -194,7 +194,7 @@ exports.init = function(grunt) {
 
       if (!grunt.file.exists(fpath)) {
         if (!/\{\w+\}/.test(fpath)) {
-          grunt.log.warn("can't find " + fpath);
+          grunt.log.warn("can't find " + fpath + ', basefile: '+basefile);
         }
         return [];
       }
@@ -239,7 +239,7 @@ exports.init = function(grunt) {
           var ext = path.extname(alias);
           if (ext && ext !== '.js') return;
 
-          var mdeps = moduleDependencies(id, options);
+          var mdeps = moduleDependencies(id, options, basefile);
           moduleDeps[id] = mdeps;
           deps = grunt.util._.union(deps, mdeps);
         }
