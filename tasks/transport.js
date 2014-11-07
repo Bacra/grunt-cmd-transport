@@ -61,7 +61,7 @@ module.exports = function(grunt) {
     var customAliasKeys = Object.keys(options.alias);
     if (typeof options.keepAlias == 'string') {
       if (grunt.file.exists(options.keepAlias)) {
-        grunt.util._.union(options.alias, grunt.file.readJSON(options.keepAlias));
+        options.alias = grunt.util._.extend({}, grunt.file.readJSON(options.keepAlias), options.alias);
       }
     }
 
