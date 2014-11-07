@@ -126,7 +126,7 @@ module.exports = function(grunt) {
       customAliasKeys.forEach(function(alias) {
         delete tmpAlias[alias];
       });
-      grunt.file.write(options.keepAlias, JSON.stringify(tmpAlias));
+      grunt.file.write(options.keepAlias, JSON.stringify(tmpAlias, null, '\t'));
       grunt.log.writeln('transport write minAlias file: ' + options.keepAlias);
     }
   });
