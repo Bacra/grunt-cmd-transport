@@ -155,26 +155,34 @@ exports.init = function(grunt) {
     return deps;
   }
 
-  var minAlias = {};
-  var minAliasIndex = 0;
   function getMinAlias(alias, options) {
+    options.__minAliasIndex__ || (options.__minAliasIndex__ = 14);
+    var minAlias = options.__minAlias__ || (options.__minAlias__ = {});
+    var newAlias = options.__newAlias__ || (options.__newAlias__ = {});
+    var usedAlias = options.__usedAlias__ || (options.__usedAlias__ = {});
+
     if (typeof options.keepAlias == 'string') {
       alias = iduri.parseAlias(options, alias);
-      if (minAlias[alias]) return minAlias[alias];
+      if (minAlias[alias]) {
+        usedAlias[minAlias[alias]] = alias;
+        return minAlias[alias];
+      }
 
       var uin;
       do {
-        uin = cutInt(minAliasIndex++);
+        uin = cutInt(options.__minAliasIndex__++);
       } while(options.alias[uin]);
       options.alias[uin] = alias;
       minAlias[alias] = uin;
+      newAlias[uin] = alias;
+      usedAlias[uin] = alias;
 
       return uin;
     }
 
     return alias;
   }
-  var minAliasChar = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-0123456789$&%=+';
+  var minAliasChar = '-0123456789=+$&%ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_';
   function cutInt(num) {
     strArrLen = minAliasChar.length;
     return num < strArrLen ? minAliasChar[num] : cutInt(Math.floor(num/strArrLen), minAliasChar, strArrLen) + minAliasChar[num%strArrLen];
