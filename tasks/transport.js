@@ -60,8 +60,15 @@ module.exports = function(grunt) {
 
     var customAliasKeys = Object.keys(options.alias);
     if (typeof options.keepAlias == 'string') {
+      options.__usedAlias__ = {};
+      options.__newAlias__ = {};
       if (grunt.file.exists(options.keepAlias)) {
-        grunt.util._.union(options.alias, grunt.file.readJSON(options.keepAlias));
+        var tmpAllMinAlias = grunt.file.readJSON(options.keepAlias).minAll;
+        var tmpAllMinAliasF = options.__minAlias__ = {};
+        grunt.util._.keys(tmpAllMinAlias).forEach(function(key) {
+          tmpAllMinAliasF[tmpAllMinAlias[key]] = key;
+        });
+        options.alias = grunt.util._.extend({}, tmpAllMinAlias, options.alias);
       }
     }
 
@@ -123,10 +130,16 @@ module.exports = function(grunt) {
 
     if (typeof options.keepAlias == 'string') {
       var tmpAlias = grunt.util._.extend({}, options.alias);
+      // It's safly to delete custom alias
       customAliasKeys.forEach(function(alias) {
         delete tmpAlias[alias];
       });
-      grunt.file.write(options.keepAlias, JSON.stringify(tmpAlias, null, '\t'));
+      grunt.file.write(options.keepAlias, JSON.stringify({
+        all: options.alias,
+        minAll: tmpAlias,
+        last: options.__usedAlias__,
+        'new': options.__newAlias__
+      }, null, '\t'));
       grunt.log.writeln('transport write minAlias file: ' + options.keepAlias);
     }
   });

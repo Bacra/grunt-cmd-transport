@@ -99,7 +99,7 @@ exports.init = function(grunt) {
     return data;
   }
 
-  function moduleDependencies(id, options) {
+  function moduleDependencies(id, options, basefile) {
     var alias = iduri.parseAlias(options, id);
 
     if (iduri.isAlias(options, id) && alias === id) {
@@ -122,18 +122,18 @@ exports.init = function(grunt) {
     options.paths.some(function(base) {
       var filepath = path.join(base, file);
       if (grunt.file.exists(filepath)) {
-        grunt.log.verbose.writeln('find module "' + filepath + '"');
+        grunt.log.verbose.writeln('find module "' + filepath + '", basefile: '+basefile);
         fpath = filepath;
         return true;
       }
     });
 
     if (!fpath) {
-      grunt.fail.warn("can't find module " + alias);
+      grunt.fail.warn("can't find module " + alias + ', basefile: '+basefile);
       return [];
     }
     if (!grunt.file.exists(fpath)) {
-      grunt.fail.warn("can't find " + fpath);
+      grunt.fail.warn("can't find " + fpath + ', basefile: '+basefile);
       return [];
     }
     var data = grunt.file.read(fpath);
@@ -155,26 +155,34 @@ exports.init = function(grunt) {
     return deps;
   }
 
-  var minAlias = {};
-  var minAliasIndex = 0;
   function getMinAlias(alias, options) {
+    options.__minAliasIndex__ || (options.__minAliasIndex__ = 14);
+    var minAlias = options.__minAlias__ || (options.__minAlias__ = {});
+    var newAlias = options.__newAlias__ || (options.__newAlias__ = {});
+    var usedAlias = options.__usedAlias__ || (options.__usedAlias__ = {});
+
     if (typeof options.keepAlias == 'string') {
       alias = iduri.parseAlias(options, alias);
-      if (minAlias[alias]) return minAlias[alias];
+      if (minAlias[alias]) {
+        usedAlias[minAlias[alias]] = alias;
+        return minAlias[alias];
+      }
 
       var uin;
       do {
-        uin = cutInt(minAliasIndex++);
+        uin = cutInt(options.__minAliasIndex__++);
       } while(options.alias[uin]);
       options.alias[uin] = alias;
       minAlias[alias] = uin;
+      newAlias[uin] = alias;
+      usedAlias[uin] = alias;
 
       return uin;
     }
 
     return alias;
   }
-  var minAliasChar = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-0123456789$&%=+';
+  var minAliasChar = '-0123456789=+$&%ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_';
   function cutInt(num) {
     strArrLen = minAliasChar.length;
     return num < strArrLen ? minAliasChar[num] : cutInt(Math.floor(num/strArrLen), minAliasChar, strArrLen) + minAliasChar[num%strArrLen];
@@ -194,7 +202,7 @@ exports.init = function(grunt) {
 
       if (!grunt.file.exists(fpath)) {
         if (!/\{\w+\}/.test(fpath)) {
-          grunt.log.warn("can't find " + fpath);
+          grunt.log.warn("can't find " + fpath + ', basefile: '+basefile);
         }
         return [];
       }
@@ -239,7 +247,7 @@ exports.init = function(grunt) {
           var ext = path.extname(alias);
           if (ext && ext !== '.js') return;
 
-          var mdeps = moduleDependencies(id, options);
+          var mdeps = moduleDependencies(id, options, basefile);
           moduleDeps[id] = mdeps;
           deps = grunt.util._.union(deps, mdeps);
         }
