@@ -40,18 +40,20 @@ exports.init = function(grunt) {
         'found dependencies ' + deps : 'found no dependencies');
     }
 
+    function replaceRequire(v) {
+      if (typeof options.keepAlias == 'string') {
+        return getMinAlias(v, options);
+      } else {
+        // ignore when deps is specified by developer
+        return depsSpecified || options.keepAlias === true ? v : iduri.parseAlias(options, v);
+      }
+    }
     // create .js file
     astCache = ast.modify(astCache, {
       id: getMinAlias(meta.id ? meta.id : unixy(options.idleading + fileObj.name.replace(/\.js$/, '')), options),
       dependencies: deps,
-      require: function(v) {
-        if (typeof options.keepAlias == 'string') {
-          return getMinAlias(v, options);
-        } else {
-          // ignore when deps is specified by developer
-          return depsSpecified || options.keepAlias === true ? v : iduri.parseAlias(options, v);
-        }
-      }
+      require: replaceRequire,
+      async: replaceRequire
     });
     data = astCache.print_to_string(options.uglify);
     grunt.file.write(fileObj.dest, addOuterBoxClass(data, options));
