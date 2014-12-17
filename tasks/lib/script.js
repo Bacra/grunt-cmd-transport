@@ -192,11 +192,22 @@ exports.init = function(grunt) {
 
     return alias;
   }
-  var minAliasChar = '-0123456789=+$&%ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_';
-  function cutInt(num) {
-    strArrLen = minAliasChar.length;
-    return num < strArrLen ? minAliasChar[num] : cutInt(Math.floor(num/strArrLen), minAliasChar, strArrLen) + minAliasChar[num%strArrLen];
-  }
+  var cutInt = (function(chars) {
+    var radix = chars.length;
+
+    return function (num) {
+      var out = [];
+      var mod;
+
+      do {
+        mod = num % radix;
+        num = (num - mod) / radix;
+        out.push(chars[mod]);
+      } while (num);
+
+      return out.join('');
+    };
+  })('-0123456789=+$&%ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_');
 
   function parseDependencies(fpath, fname, options) {
     var rootpath = fpath;
