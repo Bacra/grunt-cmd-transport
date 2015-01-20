@@ -169,7 +169,9 @@ exports.init = function(grunt) {
       if (alias.charAt(0) == '.') {
         alias = path.join(path.dirname(fromfile), alias);
       }
-      alias = path.normalize(alias).replace(/\\/g, '/');
+
+      // ignore protocol & //example.com/xxxx
+      if (alias.indexOf(':') == -1 || alias.indexOf('//') === 0) alias = path.normalize(alias).replace(/\\/g, '/');
 
       if (minAlias[alias]) {
         usedAlias[minAlias[alias]] = alias;
